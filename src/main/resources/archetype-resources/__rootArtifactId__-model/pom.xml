@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>${groupId}</groupId>
+        <artifactId>${rootArtifactId}-parent</artifactId>
+        <version>${version}</version>
+    </parent>
+    <artifactId>${artifactId}</artifactId>
+    <name>${project.groupId}:${project.artifactId}</name>
+
+    <description>This module is provided for this example to work. It is recommended that it does not exist
+        within the project and, instead, import a library with the api and data access.</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>${rootArtifactId}-api</artifactId>
+        </dependency>
+
+        <!-- FWK DEPENDENCIES -->
+        <dependency>
+            <groupId>es.jpargoteo.bay</groupId>
+            <artifactId>bay-fwk-starter-openapi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>es.jpargoteo.bay</groupId>
+            <artifactId>bay-fwk-starter-data-mongodb</artifactId>
+        </dependency>
+
+    </dependencies>
+
+</project>

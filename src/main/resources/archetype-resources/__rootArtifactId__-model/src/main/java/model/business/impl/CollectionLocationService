@@ -1,0 +1,47 @@
+#set( $symbol_pound = '#' )
+#set( $symbol_dollar = '$' )
+#set( $symbol_escape = '\' )
+package ${package}.model.business.impl;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Example;
+
+import ${package}.model.business.ICollectionLocationService;
+import ${package}.model.domain.CollectionLocation;
+import ${package}.model.repository.CollectionLocationRepository;
+
+public class CollectionLocationService implements ICollectionLocationService {
+
+    @Autowired
+    private CollectionLocationRepository repository;
+
+    /* (non-Javadoc)
+     * @see ${groupId}.contentserver.business.ICollectionLocationService${symbol_pound}getAll()
+     */
+    @Override
+    public List<CollectionLocation> getAll(){
+        return repository.findAll();
+    }
+
+    @Override
+    @Cacheable(value="collectionLocations",key="${symbol_pound}name",unless="${symbol_pound}result == null")
+    public CollectionLocation get(String name) {
+        CollectionLocation collection=new CollectionLocation();
+        collection.setName(name);
+        Example<CollectionLocation> example=Example.of(collection);
+        return repository.findOne(example).get();
+
+    }
+
+    @Override
+    @CachePut(value="collectionLocations",key="${symbol_pound}collection.name")
+    public CollectionLocation insert(CollectionLocation collection) {
+        return repository.save(collection);
+
+    }
+
+}
