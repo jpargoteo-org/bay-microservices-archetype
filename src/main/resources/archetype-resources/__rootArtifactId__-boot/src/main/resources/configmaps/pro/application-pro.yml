@@ -1,0 +1,7 @@
+server:
+  port: 8080
+bay:
+#debug: true
+logging:
+  level:
+    root: INFO
