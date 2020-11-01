@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>es.jpargoteo.bay</groupId>
+        <artifactId>bay-fwk</artifactId>
+        <version>1.0.0</version>
+    </parent>
+    <artifactId>fibonacci-parent</artifactId>
+    <groupId>es.jpargoteo.${rootArtifactId}</groupId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>Multimodule Content Server</description>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>es.jpargoteo.${rootArtifactId}</groupId>
+                <artifactId>fibonacci-api</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>es.jpargoteo.${rootArtifactId}</groupId>
+                <artifactId>fibonacci-model</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>es.jpargoteo.${rootArtifactId}</groupId>
+                <artifactId>fibonacci-ws</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>es.jpargoteo.${rootArtifactId}</groupId>
+                <artifactId>fibonacci-ms</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>es.jpargoteo.${rootArtifactId}</groupId>
+                <artifactId>fibonacci-boot</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    <modules>
+        <module>fibonacci-api</module>
+        <module>fibonacci-model</module>
+        <module>fibonacci-ws</module>
+        <module>fibonacci-ms</module>
+        <module>fibonacci-boot</module>
+    </modules>
+</project>

@@ -1,0 +1,144 @@
+pipeline {
+    agent any
+	
+	tools {
+        maven 'Maven 3.2.2' 
+    }
+    
+    options {
+		timeout(time: 20, unit: 'MINUTES') 
+	}
+    
+    environment {
+    	//Use Pipeline Utility Steps plugin to read information from pom.xml into env variables
+    	MVN_IMAGE = readMavenPom().getArtifactId()
+    	MVN_VERSION = readMavenPom().getVersion()
+    }
+    
+    stages {
+        
+        stage('Compile') {
+            steps {
+            	sh "echo POM VERSION is ${MVN_VERSION}"
+          		sh "echo PROFILE is ${env.profile}"
+                
+                sh "mvn clean -DskipTests"
+            }
+        }
+        
+        stage('Sonar') {
+            when {
+                expression {
+                    return env.sonar_enable == 'true'
+                } 
+            }
+
+            steps {
+                sh "mvn clean install"
+                sh "mvn sonar:sonar -Dsonar.projectKey=${sonar_project_key}"
+            }
+        }
+        
+        stage('Tests') {
+            steps {
+                sh "mvn test"
+            }
+        }
+        
+        stage('Package') {
+            steps {
+            	sh "mvn package -DskipTests"
+                stash name:"first-stash", includes:"${application}-boot/target/${application}-boot-${MVN_VERSION}.jar"  
+            }
+        }
+        
+        stage('Build image'){
+        	steps {
+	        	unstash name:"first-stash"
+	           	sh "mv ${application}-boot/target/${application}-boot-${MVN_VERSION}.jar ${application}-boot/target/my-service.jar"
+	           	script {
+	           		timeout(time: 10, unit: 'MINUTES') {
+	                	openshift.withCluster() {
+	                    	openshift.withProject() {
+		                      	def bc = openshift.selector('bc', "${application}")
+		                      	echo "Found 1/${bc.count()} buildconfig"
+	                          
+	                          	def bcObject = bc.object()
+	                          	bcObject.spec.output.to.name = "${application}:${MVN_VERSION}"
+	                          	openshift.apply(bcObject)
+	                          
+	                          	build = bc.startBuild("--from-file=${application}-boot/target/my-service.jar")
+	
+		                      	build.untilEach {
+		                      		echo "Status ${it.object().status.phase}"
+		                      		echo "Name ${it.name()} - Status ${it.object().status.phase}"
+		                        	return it.object().status.phase == 'Complete'
+		                      	}
+	                   		}
+	                  	}  
+	                }
+	      		}
+	      	}
+        }
+        
+        stage('ConfigMaps'){
+        	steps{
+          		
+           		script {
+          			openshift.withCluster() {
+	                    openshift.withProject() {
+          					def cm = openshift.selector('cm', "${application}-configmap-${env.profile}")
+          					echo "Found 1/${cm.count()} config maps"
+          					
+          					if (cm.exists()) {
+								cm.delete()
+							}
+          					
+          					sh "oc create configmap ${application}-configmap-${env.profile} --from-file=${application}-boot/src/main/resources/configmaps/${env.profile}/"
+          					// Update label in configmap
+          					sh "oc label --overwrite configmap ${application}-configmap-${env.profile} app=${application} deploymentconfig=${application}"
+          				}
+          			}
+          		}
+         	}
+        }
+        
+        stage('Tag image'){
+          	steps {
+	           	script {
+					openshift.withCluster() {
+						openshift.withProject() {
+						
+							// We tag our 'imagename:latest' image to 'imagename:stable' so that we can revert if needed
+							try {
+						        openshift.tag("${application}:latest","${application}:stable")
+						    } catch ( e ) {
+						        // The exception is produced because the latest tag isn't exist.
+						        echo "Error encountered: ${e}"
+						    }
+        					
+							openshift.tag("${application}:${MVN_VERSION}", "${application}:latest")
+						}
+					}  
+	      		}
+	      	}
+        }
+        
+        stage('Deploy'){
+        	steps{
+            	echo "Deploy artifact"
+				sh "mvn deploy"
+            	
+            	script {
+               		openshift.withCluster() {
+                      	openshift.withProject() {
+                        	def dc = openshift.selector('dc', "${application}")
+                        	dc.rollout().status()
+                      	}
+                   	}
+             	}
+         	}
+       	}
+    }
+    
+}
